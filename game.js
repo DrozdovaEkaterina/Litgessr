@@ -5,9 +5,11 @@
   const durations = {easy: 0, medium: 90, hard: 30};
   const dailyGoal = 5;
   const storageKey = "litgessr-progress-v1";
+  const cycleKey = "litgessr-scene-cycle-v1";
   const $ = (id) => document.getElementById(id);
   const screens = [...document.querySelectorAll(".screen")];
-  const answer = $("answer");
+  const authorInput = $("answer-author");
+  const titleInput = $("answer-title");
   const timer = $("round-timer");
   const submit = $("submit-answer");
   const images = new Map();
@@ -15,7 +17,7 @@
   let canSave = true;
   let profile = {nickname: "", coins: 0, correct: 0, total: 0, days: {}};
   let mode = null;
-  let deck = [];
+  let seenScenes;
   let number = 0;
   let current = null;
   let screen = null;
@@ -117,13 +119,32 @@
     showScreen("progress", "progress-title");
   }
 
-  function shuffledRounds() {
-    const shuffled = [...rounds];
-    for (let index = shuffled.length - 1; index > 0; index--) {
-      const other = Math.floor(Math.random() * (index + 1));
-      [shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]];
+  function readSceneCycle() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(cycleKey));
+      if (Array.isArray(saved)) return saved;
+    } catch {
+      // Keep the current cycle when browser storage is unavailable.
     }
-    return shuffled;
+    return seenScenes ?? [...new Set(Object.values(profile.days).flat())];
+  }
+
+  function unseenRounds(seen) {
+    const available = rounds.filter(({id}) => !seen.includes(id));
+    return available.length ? available : rounds.filter(({id}) => id !== seen.at(-1));
+  }
+
+  function claimScene(round) {
+    const seen = readSceneCycle();
+    if (!unseenRounds(seen).includes(round)) return false;
+    const completedCycle = rounds.every(({id}) => seen.includes(id));
+    seenScenes = completedCycle ? [round.id] : [...seen, round.id];
+    try {
+      localStorage.setItem(cycleKey, JSON.stringify(seenScenes));
+    } catch {
+      // The current tab still keeps track of scenes.
+    }
+    return true;
   }
 
   function asset(id) {
@@ -160,37 +181,41 @@
   function startGame(nextMode) {
     if (screen !== "home") return;
     mode = nextMode;
-    deck = shuffledRounds();
     current = null;
     number = 0;
     nextRound();
   }
 
   function nextRound() {
-    if (!deck.length) {
-      deck = shuffledRounds();
-      if (deck.length > 1 && deck[0] === current?.round) {
-        deck.push(deck.shift());
-      }
-    }
-    loadRound(deck.shift());
+    const available = unseenRounds(readSceneCycle());
+    loadRound(available[Math.floor(Math.random() * available.length)]);
   }
 
   async function loadRound(round) {
     pendingRound = round;
+    $("retry").disabled = true;
     showLoading("Готовим иллюстрацию…");
     try {
       await prepareImage(round.id);
     } catch {
+      $("retry").disabled = false;
       showLoading("Не удалось загрузить иллюстрацию.", true);
       return;
     }
 
+    const claimed = navigator.locks
+      ? await navigator.locks.request(cycleKey, () => claimScene(round)).catch(() => claimScene(round))
+      : claimScene(round);
+    if (!claimed) {
+      nextRound();
+      return;
+    }
     pendingRound = null;
     number++;
     $("scene-image").src = asset(round.id);
     $("game-round-number").textContent = `Раунд ${number}`;
-    answer.value = "";
+    authorInput.value = "";
+    titleInput.value = "";
     submit.disabled = true;
     updateBalance();
     timer.classList.remove("urgent");
@@ -198,10 +223,9 @@
     const started = performance.now();
     current = {round, started, deadline: duration ? started + duration * 1000 : Infinity};
     showScreen("play");
-    if (matchMedia("(pointer: fine)").matches) answer.focus({preventScroll: true});
+    if (matchMedia("(pointer: fine)").matches) authorInput.focus({preventScroll: true});
     updateTimer();
     if (duration && screen === "play") timerId = window.setInterval(updateTimer, 100);
-    if (deck[0]) prepareImage(deck[0].id).catch(() => {});
   }
 
   function updateTimer() {
@@ -215,7 +239,7 @@
     timer.setAttribute("aria-label", "Оставшееся время");
     const seconds = Math.ceil((current.deadline - performance.now()) / 1000);
     if (seconds <= 0) {
-      finishRound("", true);
+      finishRound(true);
       return;
     }
     const digits = `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
@@ -228,25 +252,23 @@
       .replace(/[^а-я0-9]+/g, " ").trim();
   }
 
-  function checkAnswer(value, round) {
-    const normalized = normalize(value);
-    const words = ` ${normalized} `;
-    const includes = (part) => words.includes(` ${normalize(part)} `);
-    const author = round.authors.some(includes);
-    const title = round.titles.some(includes);
-    return {author, title};
-  }
-
-  function finishRound(value, timeExpired = false) {
+  function finishRound(timeExpired = false) {
     if (screen !== "play") return;
     const now = performance.now();
     const expired = timeExpired || now >= current.deadline;
-    if (!expired && !normalize(value)) return;
+    const authorAnswer = normalize(authorInput.value);
+    const titleAnswer = normalize(titleInput.value);
+    if (!expired && !authorAnswer && !titleAnswer) return;
 
     clearInterval(timerId);
     timerId = null;
     const {round, started} = current;
-    const {author, title} = expired ? {author: false, title: false} : checkAnswer(value, round);
+    const author = !expired && [round.author, ...round.authors].some(
+      (name) => normalize(name) === authorAnswer
+    );
+    const title = !expired && [round.title, ...round.titles].some(
+      (name) => normalize(name) === titleAnswer
+    );
     const correct = author || title;
     const full = author && title;
     const base = correct ? (full ? 100 : 40) : 0;
@@ -298,10 +320,12 @@
   $("open-progress").addEventListener("click", showProgress);
   $("keep-playing").addEventListener("click", nextRound);
   $("retry").addEventListener("click", () => loadRound(pendingRound));
-  submit.addEventListener("click", () => finishRound(answer.value));
-  answer.addEventListener("input", () => {
-    submit.disabled = !normalize(answer.value);
-  });
+  submit.addEventListener("click", () => finishRound());
+  for (const input of [authorInput, titleInput]) {
+    input.addEventListener("input", () => {
+      submit.disabled = !normalize(authorInput.value) && !normalize(titleInput.value);
+    });
+  }
   $("nickname").addEventListener("change", (event) => {
     readProfile();
     profile.nickname = event.target.value.trim();
@@ -325,6 +349,7 @@
   });
 
   readProfile();
+  $("scene-count").textContent = `${rounds.length} сцен`;
   Promise.all([
     Promise.race([prepareImage("cover").catch(() => {}), new Promise((resolve) => setTimeout(resolve, 2500))]),
     new Promise((resolve) => setTimeout(resolve, 320))

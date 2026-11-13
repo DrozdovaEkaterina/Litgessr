@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#141914">
   <meta name="description" content="Угадайте произведение мировой литературы по иллюстрации от первого лица.">
-  <title>Litgessr — литературная игра</title>
+  <title>LitGessr — литературная игра</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css">
-  <script defer src="rounds.js"></script>
-  <script defer src="game.js"></script>
+  <link rel="stylesheet" href="style.css?v=2">
+  <script defer src="rounds.js?v=2"></script>
+  <script defer src="game.js?v=2"></script>
 </head>
 <body>
   <svg aria-hidden="true" class="symbols" xmlns="http://www.w3.org/2000/svg">
@@ -36,8 +36,8 @@
 
   <div id="shell" hidden>
     <header class="topbar">
-      <button class="brand" type="button" data-home aria-label="Litgessr, к выбору режима">
-        <span class="brand-mark"><svg class="icon"><use href="#i-book"/></svg></span><span>Litgessr</span>
+      <button class="brand" type="button" data-home aria-label="LitGessr, к выбору режима">
+        <span class="brand-mark"><svg class="icon"><use href="#i-book"/></svg></span><span>LitGessr</span>
       </button>
       <div id="round-timer" class="timer" role="timer" aria-label="Оставшееся время" hidden>
         <span id="time-digits">∞</span>
@@ -53,7 +53,7 @@
         <div class="hero">
           <div class="wrap hero-content">
             <div class="eyebrow"><svg class="icon"><use href="#i-star"/></svg> Литературная игра</div>
-            <h1 id="home-title" tabindex="-1">Litgessr</h1>
+            <h1 id="home-title" tabindex="-1">LitGessr</h1>
             <p class="hero-line">Внутри истории</p>
             <p class="hero-copy">Посмотрите на сцену глазами героя. Угадайте произведение или назовите его автора.</p>
             <div class="hero-rule" aria-hidden="true"></div>
@@ -62,7 +62,7 @@
         <div class="wrap choices">
           <div class="choices-heading">
             <h2>Выберите режим</h2>
-            <span class="scene-count"><svg class="icon"><use href="#i-book"/></svg> 15 сцен</span>
+            <span class="scene-count"><svg class="icon"><use href="#i-book"/></svg> <span id="scene-count"></span></span>
           </div>
           <div class="modes">
             <button class="mode" type="button" data-mode="easy">
@@ -96,12 +96,19 @@
           <div class="scene-corner corner-bl" aria-hidden="true"></div><div class="scene-corner corner-br" aria-hidden="true"></div>
         </div>
         <div class="answer-area">
-          <label for="answer">Какое произведение перед вами?</label>
+          <h2>Какое произведение перед вами?</h2>
           <div class="answer-row">
-            <input id="answer" type="text" maxlength="160" placeholder="Фамилия автора или название" autocomplete="off" autocapitalize="off" spellcheck="false">
+            <div class="answer-field">
+              <label for="answer-author">Автор</label>
+              <input id="answer-author" type="text" maxlength="80" placeholder="Фамилия или полное имя" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answer-help">
+            </div>
+            <div class="answer-field">
+              <label for="answer-title">Название произведения</label>
+              <input id="answer-title" type="text" maxlength="160" placeholder="Введите название" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answer-help">
+            </div>
             <button id="submit-answer" type="button" class="answer-button" aria-label="Отправить ответ" disabled><svg class="icon"><use href="#i-check"/></svg></button>
           </div>
-          <p>Один ответ на раунд. За фамилию и название вместе — больше монет.</p>
+          <p id="answer-help">Можно заполнить одно поле или оба. Отправить ответ можно один раз.</p>
         </div>
       </section>
 

@@ -200,7 +200,7 @@ body[data-screen="play"] .brand { pointer-events: none; }
   padding: 15px 24px 19px;
 }
 .scene-frame {
-  height: clamp(270px, calc(100dvh - 230px), 890px);
+  height: clamp(270px, calc(100dvh - 246px), 890px);
   position: relative;
   background: #111410;
   display: grid;
@@ -215,8 +215,10 @@ body[data-screen="play"] .brand { pointer-events: none; }
 .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
 .corner-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 .answer-area { display: grid; gap: 7px; width: min(100%, 620px); margin-inline: auto; text-align: center; }
-.answer-area label { font: 700 27px/1.05 var(--serif); }
-.answer-row { display: flex; gap: 7px; }
+.answer-area h2 { font: 700 27px/1.05 var(--serif); }
+.answer-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) auto; align-items: end; gap: 7px; }
+.answer-field { display: grid; min-width: 0; gap: 3px; text-align: left; }
+.answer-field label { font-size: 12px; font-weight: 600; color: var(--paper); }
 .answer-row input, .profile-row input {
   min-width: 0;
   min-height: 49px;
@@ -227,10 +229,11 @@ body[data-screen="play"] .brand { pointer-events: none; }
   color: var(--paper);
   font-size: 16px;
 }
-.answer-row input { flex: 1; }
+.answer-row input { width: 100%; }
 input::placeholder { color: #bcb09c; opacity: 1; }
 .answer-button {
   width: 59px;
+  min-height: 49px;
   border: 1px solid #ebc690;
   border-radius: 5px;
   background: #dcba83;
@@ -350,8 +353,11 @@ input::placeholder { color: #bcb09c; opacity: 1; }
   .timer { min-width: 71px; min-height: 44px; font-size: 29px; }
   .game-round-number { font-size: 10px; }
   .play { min-height: calc(100dvh - 63px); padding: 11px 12px 15px; align-content: stretch; grid-template-rows: minmax(220px, 1fr) auto; }
-  .scene-frame { height: auto; min-height: 220px; max-height: calc(100dvh - 205px); }
-  .answer-area label { font-size: 23px; }
+  .scene-frame { height: auto; min-height: 220px; max-height: calc(100dvh - 276px); }
+  .answer-area h2 { font-size: 23px; }
+  .answer-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .answer-field:first-child { grid-column: 1 / -1; }
+  .answer-button { width: 49px; }
   .answer-area p { font-size: 11px; }
   .centered-screen { padding: 19px 13px 28px; }
   .result-card { grid-template-columns: 1fr; max-width: 480px; }
