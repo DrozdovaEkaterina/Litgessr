@@ -78,6 +78,7 @@
   }
 
   function showHome() {
+    if (screen === "play") return;
     pendingRound = null;
     readProfile();
     const count = dailyCount();
@@ -288,25 +289,31 @@
     const wonToday = previous.length < dailyGoal && count === dailyGoal;
     saveProfile();
 
-    if (!correct && !expired) {
-      showHome();
-      return;
-    }
-
     updateBalance();
 
     $("result-image").src = asset(round.id);
-    $("result-title").textContent = expired ? "Время вышло" : "Раунд пройден";
+    $("result-title").textContent = correct ? "Раунд пройден" : expired ? "Время вышло" : "Раунд проигран";
     $("result-emblem").classList.toggle("loss", !correct);
     $("result-icon").setAttribute("href", correct ? "#i-check" : "#i-cross");
     $("result-book").textContent = round.title;
     $("result-author").textContent = round.author;
     $("result-scene").textContent = round.scene;
     $("round-coins").textContent = `+${total}`;
-    $("round-coins-detail").textContent = correct ? `${base} за ответ · ${bonus} за скорость` : "монет";
+    $("round-coins-detail").hidden = !correct;
+    if (correct) {
+      $("round-base-label").textContent = full ? "За автора и название" : author ? "За автора" : "За название";
+      $("round-base-coins").textContent = `+${base}`;
+      $("round-speed-coins").textContent = `+${bonus}`;
+    }
     $("result-daily").textContent = `${count} из ${dailyGoal}`;
     $("next-label").textContent = wonToday ? "К победе дня" : "Следующий раунд";
-    $("next-round").onclick = wonToday ? () => showVictory(day) : nextRound;
+    const nextButton = $("next-round");
+    nextButton.hidden = !correct;
+    nextButton.disabled = !correct;
+    nextButton.onclick = null;
+    if (correct) nextButton.onclick = wonToday ? () => showVictory(day) : nextRound;
+    $("result-home").classList.toggle("button-gold", !correct);
+    $("result-home").classList.toggle("button-quiet", correct);
     showScreen("result", "result-title");
   }
 

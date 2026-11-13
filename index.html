@@ -7,9 +7,9 @@
   <meta name="description" content="Угадайте произведение мировой литературы по иллюстрации от первого лица.">
   <title>LitGessr — литературная игра</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=4">
   <script defer src="rounds.js?v=2"></script>
-  <script defer src="game.js?v=3"></script>
+  <script defer src="game.js?v=4"></script>
 </head>
 <body>
   <svg aria-hidden="true" class="symbols" xmlns="http://www.w3.org/2000/svg">
@@ -122,12 +122,18 @@
             <p id="result-author" class="result-author"></p>
             <p id="result-scene" class="result-description"></p>
             <div class="result-score">
-              <div><svg class="icon"><use href="#i-coin"/></svg> <strong id="round-coins"></strong><span id="round-coins-detail"></span></div>
+              <div class="round-reward">
+                <div><svg class="icon"><use href="#i-coin"/></svg> <strong id="round-coins"></strong> <span>монет за раунд</span></div>
+                <dl id="round-coins-detail" class="round-coins-detail">
+                  <div><dt id="round-base-label"></dt><dd id="round-base-coins"></dd></div>
+                  <div><dt>Бонус за скорость</dt><dd id="round-speed-coins"></dd></div>
+                </dl>
+              </div>
               <div><span>Победа дня</span><strong id="result-daily"></strong></div>
             </div>
             <div class="button-row">
               <button id="next-round" class="button button-gold" type="button"><span id="next-label">Следующий раунд</span><svg class="icon"><use href="#i-arrow"/></svg></button>
-              <button class="button button-quiet" type="button" data-home>К выбору режима</button>
+              <button id="result-home" class="button button-quiet" type="button" data-home>В главное меню</button>
             </div>
           </div>
         </div>
