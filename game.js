@@ -78,7 +78,6 @@
   }
 
   function showHome() {
-    if (screen === "play") return;
     pendingRound = null;
     readProfile();
     const count = dailyCount();
@@ -288,10 +287,16 @@
     const count = dailyCount(day);
     const wonToday = previous.length < dailyGoal && count === dailyGoal;
     saveProfile();
+
+    if (!correct && !expired) {
+      showHome();
+      return;
+    }
+
     updateBalance();
 
     $("result-image").src = asset(round.id);
-    $("result-title").textContent = correct ? "Раунд пройден" : expired ? "Время вышло" : "Раунд проигран";
+    $("result-title").textContent = expired ? "Время вышло" : "Раунд пройден";
     $("result-emblem").classList.toggle("loss", !correct);
     $("result-icon").setAttribute("href", correct ? "#i-check" : "#i-cross");
     $("result-book").textContent = round.title;
